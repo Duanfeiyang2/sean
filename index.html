@@ -1,0 +1,3005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel NZ - New Zealand Travel Experts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* 所有之前的CSS样式保持不变 */
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: background 1.5s ease;
+            position: relative;
+            min-height: 100vh;
+        }
+        
+        /* 添加一个覆盖层，用于背景颜色变化 */
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(46, 139, 87, 0.05), rgba(60, 179, 113, 0.05), rgba(32, 178, 170, 0.05), rgba(70, 130, 180, 0.05));
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Navigation Bar Styles - 添加渐变效果 */
+        header {
+            background: linear-gradient(90deg, #2E8B57, #3CB371, #20B2AA, #4682B4);
+            background-size: 400% 400%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 25px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #f0f0f0;
+        }
+        
+        .nav-links a.active {
+            color: white;
+            border-bottom: 2px solid white;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: white;
+            color: #2E8B57;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background-color: #f0f0f0;
+            transform: translateY(-2px);
+        }
+        
+        /* 其余所有样式保持不变 */
+        .page {
+            display: none;
+            padding: 40px 0;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* 杂志式布局样式 */
+        .magazine-layout {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .magazine-feature {
+            grid-column: span 8;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: 500px;
+        }
+        
+        .magazine-feature img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .magazine-feature:hover img {
+            transform: scale(1.05);
+        }
+        
+        .magazine-feature-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            padding: 30px;
+        }
+        
+        .magazine-feature-content h2 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .magazine-sidebar {
+            grid-column: span 4;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .magazine-side-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .magazine-side-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .magazine-side-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .magazine-side-content {
+            padding: 20px;
+        }
+        
+        .magazine-side-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2E8B57;
+        }
+        
+        .magazine-grid {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .magazine-grid-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .magazine-grid-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .magazine-grid-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        
+        .magazine-grid-content {
+            padding: 20px;
+        }
+        
+        .magazine-grid-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #2E8B57;
+        }
+        
+        .magazine-grid-content p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        /* Homepage Styles - Updated with Carousel */
+        .hero-carousel {
+            position: relative;
+            height: 70vh;
+            overflow: hidden;
+            margin-bottom: 50px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .carousel-slides {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .carousel-slide.active {
+            opacity: 1;
+        }
+        
+        .carousel-slide::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6));
+        }
+        
+        .carousel-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+            z-index: 2;
+            width: 90%;
+            max-width: 800px;
+        }
+        
+        .carousel-content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+        
+        .carousel-content p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+        
+        .carousel-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 3;
+        }
+        
+        .carousel-dots {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .carousel-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .carousel-dot.active {
+            background-color: white;
+        }
+        
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            transition: background-color 0.3s;
+        }
+        
+        .carousel-arrow:hover {
+            background-color: rgba(255,255,255,0.4);
+        }
+        
+        .carousel-arrow.prev {
+            left: 20px;
+        }
+        
+        .carousel-arrow.next {
+            right: 20px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            color: #2E8B57;
+            margin-bottom: 20px;
+        }
+        
+        .tours-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .tour-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .tour-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .tour-image {
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .tour-image::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.3));
+        }
+        
+        .tour-content {
+            padding: 20px;
+        }
+        
+        .tour-badge {
+            display: inline-block;
+            background: #E67E22;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+        
+        .tour-title {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+        
+        .tour-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .tour-price {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2E8B57;
+            margin-bottom: 15px;
+        }
+        
+        /* Tours Page Styles */
+        .filters-sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        
+        .filter-group h3 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .filter-options label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .tours-listing {
+            display: grid;
+            gap: 30px;
+        }
+        
+        /* Itinerary Styles */
+        .itinerary-section {
+            margin: 60px 0;
+        }
+        
+        .itinerary-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 30px;
+        }
+        
+        .itinerary-tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .itinerary-tab.active {
+            color: #2E8B57;
+            border-bottom: 3px solid #2E8B57;
+        }
+        
+        .itinerary-content {
+            display: none;
+        }
+        
+        .itinerary-content.active {
+            display: block;
+        }
+        
+        .day-itinerary {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .day-title {
+            font-size: 1.4rem;
+            color: #2E8B57;
+        }
+        
+        .day-location {
+            font-size: 1rem;
+            color: #666;
+        }
+        
+        .itinerary-points {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .itinerary-point {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #2E8B57;
+        }
+        
+        .point-time {
+            font-weight: 600;
+            color: #2E8B57;
+            min-width: 80px;
+        }
+        
+        .point-content {
+            flex: 1;
+        }
+        
+        .point-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .point-description {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        
+        .map-container {
+            margin-top: 30px;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            background: #f8f9fa;
+        }
+        
+        .map-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .map-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #2E8B57;
+            font-size: 1.3rem;
+        }
+        
+        .coordinates-info {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .coordinates-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        .coordinates-table th, .coordinates-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .coordinates-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .coordinates-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        /* Contact Page Styles */
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 40px;
+        }
+        
+        .contact-info {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .contact-method {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+        
+        .contact-icon {
+            font-size: 24px;
+            color: #2E8B57;
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+        
+        .contact-form {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        textarea.form-control {
+            min-height: 120px;
+        }
+        
+        /* About New Zealand Page Styles */
+        .about-hero {
+            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=1200&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3JTIwemVhbGFuZCUyMGxhbmRzY2FwZXxlbnwwfHwwfHx8MA%3D%3D');
+            background-size: cover;
+            background-position: center;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            border-radius: 12px;
+            margin-bottom: 50px;
+        }
+        
+        .about-hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        .about-hero-content p {
+            font-size: 1.3rem;
+            max-width: 600px;
+            margin: 0 auto;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        }
+        
+        .about-section {
+            margin-bottom: 60px;
+        }
+        
+        .about-section h2 {
+            color: #2E8B57;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            border-bottom: 3px solid #2E8B57;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .about-content {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            line-height: 1.8;
+        }
+        
+        .about-content p {
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .about-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .about-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .about-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .about-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .about-card-content {
+            padding: 25px;
+        }
+        
+        .about-card-content h3 {
+            color: #2E8B57;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .fact-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+        
+        .fact-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+        
+        .fact-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .fact-list i {
+            color: #2E8B57;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+        
+        /* Footer Styles */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 50px 0 20px;
+            margin-top: 50px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .footer-column h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-column a:hover {
+            color: white;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .social-links a:hover {
+            background: #2E8B57;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+            }
+            
+            .nav-links {
+                margin-top: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-links li {
+                margin: 5px 10px;
+            }
+            
+            .carousel-content h1 {
+                font-size: 2rem;
+            }
+            
+            .carousel-arrow {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .features, .tours-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .itinerary-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .itinerary-tab {
+                flex: 1;
+                min-width: 120px;
+                text-align: center;
+            }
+            
+            .coordinates-table {
+                font-size: 0.8rem;
+            }
+            
+            .magazine-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .magazine-feature, .magazine-sidebar, .magazine-grid {
+                grid-column: 1;
+            }
+            
+            .magazine-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .about-hero-content h1 {
+                font-size: 2.2rem;
+            }
+            
+            .about-hero-content p {
+                font-size: 1.1rem;
+            }
+            
+            .about-content {
+                padding: 25px;
+            }
+            
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 背景覆盖层 -->
+    <div class="bg-overlay"></div>
+    
+    <!-- Navigation Bar -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">Travel NZ</a>
+                <ul class="nav-links">
+                    <li><a href="#" class="nav-link active" data-page="home">Home</a></li>
+                    <li><a href="#" class="nav-link" data-page="about">About New Zealand</a></li>
+                    <li><a href="#" class="nav-link" data-page="tours">Tours</a></li>
+                    <li><a href="#" class="nav-link" data-page="itinerary">Itinerary</a></li>
+                    <li><a href="#" class="nav-link" data-page="contact">Contact</a></li>
+                    <li><a href="#" class="btn">Book Now</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Homepage Content -->
+    <section id="home" class="page active">
+        <!-- 原有的Home页面内容保持不变 -->
+        <!-- Hero Carousel -->
+        <div class="hero-carousel">
+            <div class="carousel-slides">
+                <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D');"></div>
+                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1528988719300-046ff7faf8cb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D');"></div>
+                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3JTIwemVhbGFuZHxlbnwwfHwwfHx8MA%3D%3D');"></div>
+                <div class="carousel-slide" style="background-image: url('https://plus.unsplash.com/premium_photo-1661962302792-4b05d3e08513?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIwemVhbGFuZHxlbnwwfHwwfHx8MA%3D%3D');"></div>
+            </div>
+            
+            <div class="carousel-content">
+                <h1>Discover New Zealand's Natural Wonders</h1>
+                <p>Tailored New Zealand travel experiences, from majestic mountains to pristine coastlines, beginning an unforgettable Middle-earth journey</p>
+                <a href="#" class="btn" style="background-color: #E67E22; color: white;">Start Planning Your Journey</a>
+            </div>
+            
+            <button class="carousel-arrow prev">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-arrow next">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            
+            <div class="carousel-nav">
+                <div class="carousel-dots">
+                    <span class="carousel-dot active" data-index="0"></span>
+                    <span class="carousel-dot" data-index="1"></span>
+                    <span class="carousel-dot" data-index="2"></span>
+                    <span class="carousel-dot" data-index="3"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- 杂志式布局 -->
+            <div class="magazine-layout">
+                <div class="magazine-feature">
+                    <img src="https://imgs-qn.51miz.com/preview/photo/00/00/00/00/V-1924AF19.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/avif" alt="New Zealand Landscape">
+                    <div class="magazine-feature-content">
+                        <h2>Explore the Majestic Landscapes of New Zealand</h2>
+                        <p>From the Southern Alps to the pristine beaches, discover the breathtaking beauty that makes New Zealand a traveler's paradise.</p>
+                    </div>
+                </div>
+                
+                <div class="magazine-sidebar">
+                    <div class="magazine-side-item">
+                        <img src="https://imgs-qn.51miz.com/preview/photo/00/01/57/07/new-P-1570773-3BFBA440.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/avif" alt="Adventure Activities">
+                        <div class="magazine-side-content">
+                            <h3>Adventure Awaits</h3>
+                            <p>Experience thrilling activities from bungee jumping to glacier hiking in the adventure capital of the world.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="magazine-side-item">
+                        <img src="https://imgs-qn.51miz.com/preview/photo/00/01/66/14/P-1661456-F45AEB0C.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/avif" alt="Cultural Experiences">
+                        <div class="magazine-side-content">
+                            <h3>Rich Cultural Heritage</h3>
+                            <p>Immerse yourself in Māori culture and traditions that have shaped New Zealand's unique identity.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="magazine-grid">
+                    <div class="magazine-grid-item">
+                        <img src="https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D" alt="South Island">
+                        <div class="magazine-grid-content">
+                            <h3>South Island Wonders</h3>
+                            <p>Discover the dramatic landscapes of the South Island, from fjords to mountains.</p>
+                            <a href="#" class="btn">Explore More</a>
+                        </div>
+                    </div>
+                    
+                    <div class="magazine-grid-item">
+                        <img src="https://images.unsplash.com/photo-1528988719300-046ff7faf8cb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D" alt="North Island">
+                        <div class="magazine-grid-content">
+                            <h3>North Island Beauty</h3>
+                            <p>Explore geothermal wonders, vibrant cities, and rich cultural experiences.</p>
+                            <a href="#" class="btn">Explore More</a>
+                        </div>
+                    </div>
+                    
+                    <div class="magazine-grid-item">
+                        <img src="https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3JTIwemVhbGFuZHxlbnwwfHwwfHx8MA%3D%3D" alt="Wildlife">
+                        <div class="magazine-grid-content">
+                            <h3>Unique Wildlife</h3>
+                            <p>Encounter New Zealand's unique flora and fauna found nowhere else on Earth.</p>
+                            <a href="#" class="btn">Explore More</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 style="text-align: center; margin-bottom: 40px;">Why Choose Travel NZ?</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h3>Local Experts</h3>
+                    <p>Our team consists of experienced local New Zealand guides who will take you to explore hidden gems</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-suitcase-rolling"></i>
+                    </div>
+                    <h3>Fully Customizable</h3>
+                    <p>Tailor-made travel plans based on your interests, budget, and time to create a unique journey</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3>24/7 Support</h3>
+                    <p>Round-the-clock local support during your trip to ensure a worry-free journey</p>
+                </div>
+            </div>
+
+            <h2 style="text-align: center; margin: 60px 0 40px;">Featured Tour Packages</h2>
+            <div class="tours-grid">
+                <div class="tour-card">
+                    <div class="tour-image" style="background-image: url('https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D');"></div>
+                    <div class="tour-content">
+                        <span class="tour-badge">Bestseller</span>
+                        <h3 class="tour-title">South Island Classic Loop 10-Day Tour</h3>
+                        <div class="tour-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> Christchurch - Queenstown</span>
+                            <span><i class="fas fa-clock"></i> 10 Days 9 Nights</span>
+                        </div>
+                        <div class="tour-price">From ¥12,800 / person</div>
+                        <a href="#" class="btn view-itinerary" data-tour="south-island" style="display: block; text-align: center;">View Itinerary</a>
+                    </div>
+                </div>
+                <div class="tour-card">
+                    <div class="tour-image" style="background-image: url('https://images.unsplash.com/photo-1528988719300-046ff7faf8cb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D');"></div>
+                    <div class="tour-content">
+                        <span class="tour-badge">Family Choice</span>
+                        <h3 class="tour-title">North Island Cultural Adventure 7-Day Tour</h3>
+                        <div class="tour-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> Auckland - Rotorua</span>
+                            <span><i class="fas fa-clock"></i> 7 Days 6 Nights</span>
+                        </div>
+                        <div class="tour-price">From ¥8,900 / person</div>
+                        <a href="#" class="btn view-itinerary" data-tour="north-island" style="display: block; text-align: center;">View Itinerary</a>
+                    </div>
+                </div>
+                <div class="tour-card">
+                    <div class="tour-image" style="background-image: url('https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3JTIwemVhbGFuZHxlbnwwfHwwfHx8MA%3D%3D');"></div>
+                    <div class="tour-content">
+                        <span class="tour-badge">Adventure</span>
+                        <h3 class="tour-title">Extreme Sports & Natural Wonders 8-Day Tour</h3>
+                        <div class="tour-meta">
+                            <span><i class="fas fa-map-marker-alt"></i> Queenstown - Wanaka</span>
+                            <span><i class="fas fa-clock"></i> 8 Days 7 Nights</span>
+                        </div>
+                        <div class="tour-price">From ¥15,200 / person</div>
+                        <a href="#" class="btn view-itinerary" data-tour="adventure" style="display: block; text-align: center;">View Itinerary</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About New Zealand Page -->
+    <section id="about" class="page">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="about-hero">
+                <div class="about-hero-content">
+                    <h1>About New Zealand</h1>
+                    <p>Discover the Land of the Long White Cloud - Aotearoa</p>
+                </div>
+            </div>
+
+            <!-- Introduction Section -->
+            <div class="about-section">
+                <h2>Welcome to Aotearoa</h2>
+                <div class="about-content">
+                    <p>New Zealand, known in Māori as Aotearoa (the Land of the Long White Cloud), is a stunning island nation in the southwestern Pacific Ocean. Comprising two main islands—the North Island and South Island—and around 600 smaller islands, this remote paradise offers some of the world's most breathtaking natural landscapes and unique cultural experiences.</p>
+                    
+                    <p>With a population of just over 5 million people, New Zealand is renowned for its pristine environments, from majestic snow-capped mountains and ancient glaciers to lush rainforests and pristine beaches. The country's isolation has resulted in unique flora and fauna found nowhere else on Earth.</p>
+                </div>
+            </div>
+
+            <!-- Geography and Nature Section -->
+            <div class="about-section">
+                <h2>Geography & Natural Wonders</h2>
+                <div class="about-content">
+                    <p>New Zealand's dramatic landscapes were shaped by millions of years of tectonic activity and volcanic forces. The country sits on the boundary between the Pacific and Australian tectonic plates, creating the spectacular Southern Alps that run the length of the South Island.</p>
+                    
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <img src="https://imgs-qn.51miz.com/2017/06/12/02/2017061202741809_P1208491_d4f97284O.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/webp" alt="Southern Alps">
+                            <div class="about-card-content">
+                                <h3>Southern Alps</h3>
+                                <p>Home to Aoraki/Mount Cook, New Zealand's highest peak at 3,724 meters, and numerous glaciers including the famous Franz Josef and Fox Glaciers.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="about-card">
+                            <img src="https://imgs-qn.51miz.com/preview/photo/00/01/58/60/new-P-1586046-BBBD620BO.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/webp" alt="Fiordland">
+                            <div class="about-card-content">
+                                <h3>Fiordland National Park</h3>
+                                <p>A UNESCO World Heritage site featuring dramatic fiords like Milford Sound and Doubtful Sound, with waterfalls cascading from towering cliffs.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="about-card">
+                            <img src="https://imgs-qn.51miz.com/preview/photo/00/01/65/94/P-1659440-56717A25.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/webp" alt="Geothermal Areas">
+                            <div class="about-card-content">
+                                <h3>Geothermal Wonders</h3>
+                                <p>The Rotorua region showcases New Zealand's volcanic activity with geysers, hot springs, and bubbling mud pools.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Culture Section -->
+            <div class="about-section">
+                <h2>Culture & People</h2>
+                <div class="about-content">
+                    <p>New Zealand's culture is a vibrant blend of Māori heritage and European influences, creating a unique Pacific identity. The Māori people, who first arrived from Polynesia around 1300 AD, have a rich cultural tradition that remains an integral part of New Zealand's national identity.</p>
+                    
+                    <p>Today, New Zealand is a multicultural society that values diversity, equality, and environmental stewardship. The famous "Kiwi" spirit is characterized by friendliness, innovation, and a love for the great outdoors.</p>
+                    
+                    <ul class="fact-list">
+                        <li><i class="fas fa-users"></i> <strong>Population:</strong> Approximately 5.1 million people</li>
+                        <li><i class="fas fa-globe"></i> <strong>Official Languages:</strong> English, Māori, and New Zealand Sign Language</li>
+                        <li><i class="fas fa-landmark"></i> <strong>Capital City:</strong> Wellington</li>
+                        <li><i class="fas fa-city"></i> <strong>Largest City:</strong> Auckland</li>
+                        <li><i class="fas fa-flag"></i> <strong>Government:</strong> Constitutional monarchy with parliamentary democracy</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Wildlife Section -->
+            <div class="about-section">
+                <h2>Unique Wildlife</h2>
+                <div class="about-content">
+                    <p>Due to its long isolation from other land masses, New Zealand developed a unique ecosystem with many endemic species. The most famous is the flightless kiwi bird, which has become the national symbol.</p>
+                    
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <img src="https://i0.hdslb.com/bfs/archive/6f8d06a60548f24811c03c75cd13bb62607d3d54.jpg" alt="Kiwi Bird">
+                            <div class="about-card-content">
+                                <h3>Kiwi Bird</h3>
+                                <p>New Zealand's national icon, a flightless bird with hair-like feathers and a long beak.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="about-card">
+                            <img src="https://imgs-qn.51miz.com/preview/photo/00/01/63/82/P-1638224-97F18EE2.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/webp" alt="Kea Parrot">
+                            <div class="about-card-content">
+                                <h3>Kea Parrot</h3>
+                                <p>The world's only alpine parrot, known for its intelligence and curiosity.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="about-card">
+                            <img src="https://imgs-qn.51miz.com/preview/photo/00/01/54/25/new-P-1542516-54BECB58O.jpg?imageMogr2/thumbnail/700x|imageMogr2/format/webp" alt="Marine Life">
+                            <div class="about-card-content">
+                                <h3>Marine Life</h3>
+                                <p>Home to dolphins, seals, penguins, and the magnificent sperm whale.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Climate Section -->
+            <div class="about-section">
+                <h2>Climate & Best Time to Visit</h2>
+                <div class="about-content">
+                    <p>New Zealand has a temperate maritime climate with relatively mild temperatures and moderate rainfall throughout the year. The seasons are opposite to those in the Northern Hemisphere:</p>
+                    
+                    <ul class="fact-list">
+                        <li><i class="fas fa-sun"></i> <strong>Summer:</strong> December to February (20-30°C) - Ideal for beach activities and hiking</li>
+                        <li><i class="fas fa-leaf"></i> <strong>Autumn:</strong> March to May (15-25°C) - Beautiful foliage and fewer crowds</li>
+                        <li><i class="fas fa-snowflake"></i> <strong>Winter:</strong> June to August (10-15°C) - Perfect for skiing in the Southern Alps</li>
+                        <li><i class="fas fa-seedling"></i> <strong>Spring:</strong> September to November (15-20°C) - Blooming flowers and newborn wildlife</li>
+                    </ul>
+                    
+                    <p>The best time to visit depends on your interests. Summer offers the warmest weather for outdoor activities, while winter provides excellent skiing conditions. Spring and autumn often have the most stable weather and fewer tourists.</p>
+                </div>
+            </div>
+
+            <!-- New Section: Outdoor Activities -->
+            <div class="about-section">
+                <h2>Outdoor Activities</h2>
+                <div class="about-content">
+                    <p>New Zealand is a paradise for outdoor enthusiasts, offering a wide range of activities from adrenaline-pumping adventures to peaceful nature experiences.</p>
+                    
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <img src="https://tse2-mm.cn.bing.net/th/id/OIP-C.mwI1aUCNEmj7f4NpGVuogAHaE8?w=279&h=186&c=7&r=0&o=7&dpr=1.8&pid=1.7&rm=3" alt="Hiking">
+                            <div class="about-card-content">
+                                <h3>Hiking & Trekking</h3>
+                                <p>Explore world-famous trails like the Milford Track, Tongariro Alpine Crossing, and Abel Tasman Coast Track.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="about-card">
+                            <img src="https://tse4-mm.cn.bing.net/th/id/OIP-C.vUq-bwEjLV2RzDsJI60InQHaE8?w=278&h=185&c=7&r=0&o=7&dpr=1.8&pid=1.7&rm=3" alt="Water Sports">
+                            <div class="about-card-content">
+                                <h3>Water Sports</h3>
+                                <p>Enjoy kayaking, sailing, surfing, and jet boating in New Zealand's pristine lakes, rivers, and coastal waters.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="about-card">
+                            <img src="https://tse2-mm.cn.bing.net/th/id/OIP-C.Og7gka6L-IEsvu9m1k-28wHaEv?w=273&h=180&c=7&r=0&o=7&dpr=1.8&pid=1.7&rm=3" alt="Adventure Sports">
+                            <div class="about-card-content">
+                                <h3>Adventure Sports</h3>
+                                <p>Experience bungee jumping, skydiving, ziplining, and white-water rafting in the adventure capital of the world.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tours Page -->
+    <section id="tours" class="page">
+        <!-- 原有的Tours页面内容保持不变 -->
+        <div class="container">
+            <h1 style="text-align: center; margin-bottom: 40px;">Explore Our Tour Packages</h1>
+            
+            <div style="display: grid; grid-template-columns: 250px 1fr; gap: 30px;">
+                <div class="filters-sidebar">
+                    <h2 style="margin-bottom: 20px;">Filters</h2>
+                    
+                    <div class="filter-group">
+                        <h3>Travel Type</h3>
+                        <div class="filter-options">
+                            <label><input type="checkbox"> Adventure</label>
+                            <label><input type="checkbox"> Romantic Honeymoon</label>
+                            <label><input type="checkbox"> Family</label>
+                            <label><input type="checkbox"> Luxury Vacation</label>
+                            <label><input type="checkbox"> Cultural Immersion</label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h3>Destination</h3>
+                        <div class="filter-options">
+                            <label><input type="checkbox"> North Island</label>
+                            <label><input type="checkbox"> South Island</label>
+                            <label><input type="checkbox"> Full NZ Tour</label>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h3>Price Range</h3>
+                        <div class="filter-options">
+                            <label><input type="radio" name="price"> Under ¥5,000</label>
+                            <label><input type="radio" name="price"> ¥5,000 - ¥10,000</label>
+                            <label><input type="radio" name="price"> ¥10,000 - ¥15,000</label>
+                            <label><input type="radio" name="price"> Over ¥15,000</label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn" style="width: 100%;">Apply Filters</button>
+                </div>
+                
+                <div class="tours-listing">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                        <p>Showing <strong>1-3</strong> of <strong>8</strong> tours</p>
+                        <select style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <option>Sort by: Recommended</option>
+                            <option>Price: Low to High</option>
+                            <option>Price: High to Low</option>
+                            <option>Tour Duration</option>
+                        </select>
+                    </div>
+                    
+                    <div class="tours-grid">
+                        <!-- Tour cards will be dynamically loaded via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Itinerary Page - 详细行程 -->
+    <section id="itinerary" class="page">
+        <div class="container">
+            <h1 style="text-align: center; margin-bottom: 20px;">Tour Itinerary</h1>
+            <p style="text-align: center; margin-bottom: 40px; color: #666; max-width: 800px; margin-left: auto; margin-right: auto;">
+                Explore our detailed day-by-day itineraries with carefully planned routes and attractions
+            </p>
+            
+            <div class="itinerary-section">
+                <div class="itinerary-tabs">
+                    <button class="itinerary-tab active" data-itinerary="south-island">South Island Classic</button>
+                    <button class="itinerary-tab" data-itinerary="north-island">North Island Adventure</button>
+                    <button class="itinerary-tab" data-itinerary="adventure">Extreme Sports Tour</button>
+                </div>
+                
+                <!-- South Island Itinerary - 详细行程 -->
+                <div class="itinerary-content active" id="south-island-itinerary">
+                    <h2 style="margin-bottom: 30px; color: #2E8B57;">South Island Classic Loop - 10 Days</h2>
+                    
+                    <!-- Day 1 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 1: Arrival in Christchurch</h3>
+                            <div class="day-location">Christchurch</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Arrival at Christchurch Airport</div>
+                                    <div class="point-description">Meet your guide and transfer to your hotel. Brief orientation and welcome dinner at a local restaurant featuring New Zealand cuisine.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Christchurch City Tour</div>
+                                    <div class="point-description">Explore the Botanic Gardens, Canterbury Museum, and the innovative Re:START Mall built from shipping containers. Visit the Cardboard Cathedral, a symbol of the city's resilience.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Welcome Dinner & Briefing</div>
+                                    <div class="point-description">Enjoy a traditional New Zealand welcome dinner while your guide provides an overview of the upcoming adventure.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 2 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 2: Christchurch to Lake Tekapo</h3>
+                            <div class="day-location">Lake Tekapo</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Scenic Drive to Lake Tekapo</div>
+                                    <div class="point-description">Travel through the Canterbury Plains to the stunning turquoise waters of Lake Tekapo. Stop at the Church of the Good Shepherd for iconic photos.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Mount John Observatory</div>
+                                    <div class="point-description">Take a guided tour of the University of Canterbury's Mount John Observatory, offering panoramic views of the lake and surrounding mountains.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Stargazing Experience</div>
+                                    <div class="point-description">Experience world-class stargazing in the Aoraki Mackenzie International Dark Sky Reserve, one of the best places on Earth for astronomy.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 3 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 3: Lake Tekapo to Queenstown</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Scenic Drive to Queenstown</div>
+                                    <div class="point-description">Travel through the Lindis Pass and along the shores of Lake Dunstan, with stops at viewpoints for photos of the dramatic landscapes.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Queenstown Arrival & Orientation</div>
+                                    <div class="point-description">Check into your accommodation and take a guided walking tour of Queenstown's vibrant town center and waterfront.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Skyline Gondola & Dinner</div>
+                                    <div class="point-description">Take the Skyline Gondola to Bob's Peak for breathtaking views over Queenstown and Lake Wakatipu, followed by dinner at the Stratosfare Restaurant.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 4 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 4: Milford Sound Day Trip</h3>
+                            <div class="day-location">Milford Sound</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Scenic Drive to Milford Sound</div>
+                                    <div class="point-description">Travel through Fiordland National Park, stopping at Mirror Lakes, Eglinton Valley, and the Homer Tunnel before arriving at Milford Sound.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Milford Sound Cruise</div>
+                                    <div class="point-description">Experience a scenic cruise through the majestic fiord, witnessing waterfalls, rainforest-clad cliffs, and wildlife including seals and dolphins.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Return to Queenstown</div>
+                                    <div class="point-description">Return to Queenstown with stops at scenic viewpoints along the way. Enjoy dinner at one of Queenstown's renowned restaurants.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 5 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 5: Queenstown Adventure Day</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Adventure Activities</div>
+                                    <div class="point-description">Choose from a range of adventure activities including bungee jumping, jet boating, or paragliding (additional cost).</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Arrowtown Visit</div>
+                                    <div class="point-description">Explore the historic gold mining town of Arrowtown, including the Chinese Settlement and local boutique shops.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Free Evening</div>
+                                    <div class="point-description">Enjoy a free evening to explore Queenstown's dining and nightlife options at your leisure.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 6 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 6: Queenstown to Wanaka</h3>
+                            <div class="day-location">Wanaka</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Crown Range Road</div>
+                                    <div class="point-description">Travel over the Crown Range Road, New Zealand's highest main road, with spectacular views of the Wakatipu Basin.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Wanaka Exploration</div>
+                                    <div class="point-description">Visit the famous #ThatWanakaTree, explore Puzzling World, and enjoy the beautiful lakeside setting of Wanaka.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Relaxation in Wanaka</div>
+                                    <div class="point-description">Enjoy a leisurely evening in Wanaka with dinner at a local restaurant overlooking the lake.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 7 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 7: Wanaka to Franz Josef Glacier</h3>
+                            <div class="day-location">Franz Josef Glacier</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Haast Pass Journey</div>
+                                    <div class="point-description">Travel through Haast Pass, a UNESCO World Heritage site, with stops at Thunder Creek Falls and Fantail Falls.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">West Coast Arrival</div>
+                                    <div class="point-description">Arrive at Franz Josef Glacier and check into your accommodation. Take a short walk to the glacier terminal face viewpoint.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Glacier Hot Pools</div>
+                                    <div class="point-description">Relax in the Franz Josef Glacier Hot Pools, surrounded by lush rainforest.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 8 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 8: Franz Josef to Punakaiki</h3>
+                            <div class="day-location">Punakaiki</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Helicopter Glacier Flight</div>
+                                    <div class="point-description">Take an optional helicopter flight over Franz Josef and Fox Glaciers, with a snow landing on the glacier (additional cost).</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Coastal Drive to Punakaiki</div>
+                                    <div class="point-description">Travel north along the wild West Coast, stopping at Hokitika Gorge and the historic town of Hokitika.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Pancake Rocks & Blowholes</div>
+                                    <div class="point-description">Visit the Punakaiki Pancake Rocks and Blowholes, especially dramatic at high tide. Check into your accommodation and enjoy dinner.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 9 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 9: Punakaiki to Christchurch</h3>
+                            <div class="day-location">Christchurch</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Arthur's Pass Journey</div>
+                                    <div class="point-description">Travel through Arthur's Pass National Park, with stops at Otira Viaduct Lookout and other scenic viewpoints.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Castle Hill Visit</div>
+                                    <div class="point-description">Explore the limestone rock formations at Castle Hill, a significant spiritual site and popular climbing destination.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Farewell Dinner in Christchurch</div>
+                                    <div class="point-description">Return to Christchurch for a farewell dinner celebrating your South Island adventure.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 10 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 10: Departure from Christchurch</h3>
+                            <div class="day-location">Christchurch</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Free Time & Last-minute Shopping</div>
+                                    <div class="point-description">Enjoy some free time for last-minute souvenir shopping or a final stroll through Christchurch's Botanic Gardens.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Airport Transfer</div>
+                                    <div class="point-description">Transfer to Christchurch Airport for your departure flight, with memories of an unforgettable South Island journey.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="map-title">South Island Tour Route Map</h3>
+                    <div class="map-container" id="south-island-map">
+                        <div class="map-placeholder">
+                            <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>
+                            Loading map...
+                        </div>
+                    </div>
+                    
+                    <div class="coordinates-info">
+                        <h4>Key Locations & Coordinates</h4>
+                        <table class="coordinates-table">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="south-island-coordinates">
+                                <!-- Coordinates will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- North Island Itinerary -->
+                <div class="itinerary-content" id="north-island-itinerary">
+                    <h2 style="margin-bottom: 30px; color: #2E8B57;">North Island Cultural Adventure - 7 Days</h2>
+                    
+                    <!-- Day 1 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 1: Arrival in Auckland</h3>
+                            <div class="day-location">Auckland</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Arrival at Auckland Airport</div>
+                                    <div class="point-description">Meet your guide and transfer to your hotel in central Auckland. Brief orientation and welcome meeting.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Auckland City Tour</div>
+                                    <div class="point-description">Explore the City of Sails, including the Viaduct Harbour, Sky Tower, and Auckland Domain with its Wintergardens.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Welcome Dinner</div>
+                                    <div class="point-description">Enjoy a welcome dinner at a restaurant with panoramic views of the city and harbor.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 2 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 2: Auckland to Rotorua</h3>
+                            <div class="day-location">Rotorua</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Hobbiton Movie Set</div>
+                                    <div class="point-description">Visit the magical Hobbiton Movie Set from The Lord of the Rings and The Hobbit films, with a guided tour of the Shire.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Travel to Rotorua</div>
+                                    <div class="point-description">Continue to Rotorua, known for its geothermal activity and Māori culture. Check into your accommodation.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Māori Cultural Experience</div>
+                                    <div class="point-description">Enjoy an authentic Māori cultural performance and traditional hangi feast at a local marae (meeting ground).</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 3 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 3: Rotorua Geothermal Wonders</h3>
+                            <div class="day-location">Rotorua</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Te Puia Geothermal Reserve</div>
+                                    <div class="point-description">Explore Te Puia, home to the Pohutu Geyser, Māori Arts and Crafts Institute, and kiwi bird conservation center.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Wai-O-Tapu Thermal Wonderland</div>
+                                    <div class="point-description">Visit Wai-O-Tapu to see the colorful Champagne Pool, Artist's Palette, and the famous Lady Knox Geyser.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Polynesian Spa</div>
+                                    <div class="point-description">Relax in the geothermal mineral waters of the Polynesian Spa, overlooking Lake Rotorua.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 4 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 4: Rotorua to Taupo</h3>
+                            <div class="day-location">Taupo</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Redwoods Treewalk</div>
+                                    <div class="point-description">Experience the Redwoods Treewalk, a series of suspension bridges high above the forest floor in Whakarewarewa Forest.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Travel to Taupo & Huka Falls</div>
+                                    <div class="point-description">Drive to Taupo and visit the powerful Huka Falls, where the Waikato River narrows dramatically.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Lake Taupo Cruise</div>
+                                    <div class="point-description">Enjoy a scenic cruise on Lake Taupo, New Zealand's largest lake, with views of the surrounding volcanoes.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 5 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 5: Tongariro National Park</h3>
+                            <div class="day-location">Tongariro National Park</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Tongariro Alpine Crossing</div>
+                                    <div class="point-description">Embark on a guided walk on part of the Tongariro Alpine Crossing, passing volcanic landscapes and emerald lakes (options for different fitness levels).</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Whakapapa Village</div>
+                                    <div class="point-description">Visit Whakapapa Village and the Tongariro National Park Visitor Centre to learn about the area's geology and Māori legends.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Mountain Retreat</div>
+                                    <div class="point-description">Relax at your mountain accommodation with stunning views of the volcanic peaks.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 6 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 6: Wellington Capital City</h3>
+                            <div class="day-location">Wellington</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Travel to Wellington</div>
+                                    <div class="point-description">Drive south to New Zealand's capital city, Wellington, with scenic stops along the way.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Te Papa Museum</div>
+                                    <div class="point-description">Explore Te Papa Tongarewa, New Zealand's national museum, with its interactive exhibits and Māori treasures.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Cable Car & Botanic Gardens</div>
+                                    <div class="point-description">Ride the Wellington Cable Car to the Botanic Gardens and enjoy panoramic views of the city and harbor.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 7 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 7: Wellington Departure</h3>
+                            <div class="day-location">Wellington</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Weta Workshop Tour</div>
+                                    <div class="point-description">Take a guided tour of Weta Workshop, the special effects and prop company behind The Lord of the Rings and other major films.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Free Time & Departure</div>
+                                    <div class="point-description">Enjoy some free time for last-minute shopping or a final stroll along the waterfront before transferring to Wellington Airport for your departure flight.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="map-title">North Island Tour Route Map</h3>
+                    <div class="map-container" id="north-island-map">
+                        <div class="map-placeholder">
+                            <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>
+                            Loading map...
+                        </div>
+                    </div>
+                    
+                    <div class="coordinates-info">
+                        <h4>Key Locations & Coordinates</h4>
+                        <table class="coordinates-table">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="north-island-coordinates">
+                                <!-- Coordinates will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Adventure Tour Itinerary -->
+                <div class="itinerary-content" id="adventure-itinerary">
+                    <h2 style="margin-bottom: 30px; color: #2E8B57;">Extreme Sports & Natural Wonders - 8 Days</h2>
+                    
+                    <!-- Day 1 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 1: Arrival in Queenstown</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Arrival & Adventure Briefing</div>
+                                    <div class="point-description">Arrive in Queenstown, the adventure capital of the world. Meet your adventure guide and receive a comprehensive briefing on the week's activities.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Skyline Gondola & Luge</div>
+                                    <div class="point-description">Take the Skyline Gondola to Bob's Peak for panoramic views and enjoy the thrilling Luge ride down the mountain.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 2 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 2: Bungee Jumping & Jet Boating</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Nevis Bungee Jump</div>
+                                    <div class="point-description">Experience the ultimate adrenaline rush with a 134m bungee jump from the Nevis Highwire Platform, New Zealand's highest bungee.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Shotover Jet Boat Ride</div>
+                                    <div class="point-description">Hold on tight for a thrilling jet boat ride through the narrow Shotover River canyons with 360-degree spins.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Adventure Debrief & Relaxation</div>
+                                    <div class="point-description">Share stories of the day's adventures with your group over dinner at a local restaurant.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 3 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 3: Skydiving & Canyon Swinging</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Tandem Skydiving</div>
+                                    <div class="point-description">Experience the ultimate thrill of skydiving from 15,000 feet over the stunning Remarkables mountain range and Lake Wakatipu.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Canyon Swing & Fox</div>
+                                    <div class="point-description">Take on the world's highest canyon swing with a 109m freefall, followed by a zipline adventure through the canyons.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Adventure Film Night</div>
+                                    <div class="point-description">Watch footage of your day's adventures and enjoy a casual dinner with your fellow thrill-seekers.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 4 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 4: White Water Rafting</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Full Day</div>
+                                <div class="point-content">
+                                    <div class="point-title">Kawarau River Rafting</div>
+                                    <div class="point-description">Navigate the grade II-III rapids of the Kawarau River, including the famous Chinese Dog Leg rapid. Includes professional guides, safety briefing, and all equipment.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Rafting Celebration</div>
+                                    <div class="point-description">Celebrate your successful rafting adventure with a group dinner and stories from the river.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 5 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 5: Queenstown to Wanaka</h3>
+                            <div class="day-location">Wanaka</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Scenic Transfer to Wanaka</div>
+                                    <div class="point-description">Travel to Wanaka via the Crown Range Road, with stops at scenic viewpoints including the Cardrona Hotel.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Wanaka Adventures</div>
+                                    <div class="point-description">Choose between rock climbing, via ferrata, or a challenging hike up Roy's Peak for spectacular views (depending on weather conditions).</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Lakeside Relaxation</div>
+                                    <div class="point-description">Enjoy a well-deserved relaxing evening by Lake Wanaka with dinner at a local restaurant.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 6 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 6: Heli-Hiking & Glacier Exploration</h3>
+                            <div class="day-location">Wanaka</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Helicopter Flight to Glacier</div>
+                                    <div class="point-description">Take a scenic helicopter flight to a remote glacier for a guided hike on the ice, with breathtaking mountain views.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Adventure Skills Workshop</div>
+                                    <div class="point-description">Participate in an adventure skills workshop, learning basic mountaineering techniques or wilderness survival skills.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Mountain Lodge Experience</div>
+                                    <div class="point-description">Enjoy a unique overnight experience at a remote mountain lodge, with stunning alpine views.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 7 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 7: Return to Queenstown</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Scenic Flight Return</div>
+                                    <div class="point-description">Take a scenic helicopter flight back to Queenstown, with aerial views of the Southern Alps and lakes.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Afternoon</div>
+                                <div class="point-content">
+                                    <div class="point-title">Free Time & Optional Activities</div>
+                                    <div class="point-description">Enjoy free time in Queenstown for optional activities like paragliding, mountain biking, or simply relaxing.</div>
+                                </div>
+                            </div>
+                            <div class="itinerary-point">
+                                <div class="point-time">Evening</div>
+                                <div class="point-content">
+                                    <div class="point-title">Farewell Adventure Dinner</div>
+                                    <div class="point-description">Celebrate your week of extreme adventures with a special farewell dinner and presentation of adventure certificates.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Day 8 -->
+                    <div class="day-itinerary">
+                        <div class="day-header">
+                            <h3 class="day-title">Day 8: Departure from Queenstown</h3>
+                            <div class="day-location">Queenstown</div>
+                        </div>
+                        <div class="itinerary-points">
+                            <div class="itinerary-point">
+                                <div class="point-time">Morning</div>
+                                <div class="point-content">
+                                    <div class="point-title">Last Adventure & Departure</div>
+                                    <div class="point-description">Enjoy one final adventure activity or some last-minute souvenir shopping before transferring to Queenstown Airport for your departure flight.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="map-title">Adventure Tour Route Map</h3>
+                    <div class="map-container" id="adventure-map">
+                        <div class="map-placeholder">
+                            <i class="fas fa-spinner fa-spin" style="margin-right: 10px;"></i>
+                            Loading map...
+                        </div>
+                    </div>
+                    
+                    <div class="coordinates-info">
+                        <h4>Key Locations & Coordinates</h4>
+                        <table class="coordinates-table">
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adventure-coordinates">
+                                <!-- Coordinates will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Page -->
+    <section id="contact" class="page">
+        <!-- 原有的Contact页面内容保持不变 -->
+        <div class="container">
+            <h1 style="text-align: center; margin-bottom: 40px;">Contact Us</h1>
+            
+            <div class="contact-container">
+                <div class="contact-info">
+                    <h2 style="margin-bottom: 20px;">Contact Information</h2>
+                    
+                    <div class="contact-method">
+                        <div class="contact-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div>
+                            <h3>Phone Consultation</h3>
+                            <p>+64 (0) 9-123 4567</p>
+                            <p style="color: #666; font-size: 0.9rem;">Weekdays 9:00 - 18:00 NZST</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <div class="contact-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <h3>Email Us</h3>
+                            <p>hello@travelnz.com</p>
+                            <p style="color: #666; font-size: 0.9rem;">We will reply within 24 hours</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <div class="contact-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div>
+                            <h3>Office Address</h3>
+                            <p>Level 1, 123 Queen Street, Auckland, NZ</p>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-method">
+                        <div class="contact-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div>
+                            <h3>Live Chat</h3>
+                            <p>Click the chat icon in the bottom right corner</p>
+                            <p style="color: #666; font-size: 0.9rem;">Get immediate assistance</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-form">
+                    <h2 style="margin-bottom: 20px;">Get Free Travel Recommendations</h2>
+                    <p style="margin-bottom: 20px; color: #666;">Fill out the information below and our travel consultant will contact you as soon as possible.</p>
+                    
+                    <form>
+                        <div class="form-group">
+                            <label for="name">Your Full Name</label>
+                            <input type="text" id="name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="date">Estimated Travel Date</label>
+                            <input type="date" id="date" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tour">Tour of Interest</label>
+                            <select id="tour" class="form-control">
+                                <option value="">Please select...</option>
+                                <option value="south-island">South Island Classic Loop 10-Day Tour</option>
+                                <option value="north-island">North Island Cultural Adventure 7-Day Tour</option>
+                                <option value="adventure">Extreme Sports & Natural Wonders 8-Day Tour</option>
+                                <option value="custom">Custom Itinerary</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Your Message</label>
+                            <textarea id="message" class="form-control" placeholder="Please tell us your specific needs, interests, or any questions..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn" style="width: 100%;">Send Request</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div style="margin-top: 60px;">
+                <h2 style="text-align: center; margin-bottom: 30px;">Frequently Asked Questions</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div class="feature-card">
+                        <h3>How do I start planning my trip?</h3>
+                        <p>You can submit your requirements through our contact page. Our travel consultant will contact you within 24 hours to understand your specific needs and customize your itinerary.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>Can I customize my tour package?</h3>
+                        <p>Absolutely! All our packages support full customization. You can choose attractions, activities, and accommodation standards that interest you, and we will tailor it for you.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>What is the payment process?</h3>
+                        <p>Pay 30% deposit after confirming the itinerary, and the remaining 70% 60 days before departure. We support multiple payment methods including credit cards, bank transfers, etc.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Travel NZ</h3>
+                    <p>Providing the most professional New Zealand travel services, exploring the natural wonders of Middle-earth.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-weixin"></i></a>
+                        <a href="#"><i class="fab fa-weibo"></i></a>
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">About New Zealand</a></li>
+                        <li><a href="#">Tour Packages</a></li>
+                        <li><a href="#">Itinerary</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Tour Packages</h3>
+                    <ul>
+                        <li><a href="#">South Island Classic</a></li>
+                        <li><a href="#">North Island Culture</a></li>
+                        <li><a href="#">Extreme Adventure</a></li>
+                        <li><a href="#">Romantic Honeymoon</a></li>
+                        <li><a href="#">Family & Kids</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Information</h3>
+                    <ul>
+                        <li><i class="fas fa-phone"></i> +64 (0) 9-123 4567</li>
+                        <li><i class="fas fa-envelope"></i> hello@travelnz.com</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Auckland, NZ</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 Travel NZ. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Carousel Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize carousel
+            const carouselSlides = document.querySelectorAll('.carousel-slide');
+            const carouselDots = document.querySelectorAll('.carousel-dot');
+            const prevButton = document.querySelector('.carousel-arrow.prev');
+            const nextButton = document.querySelector('.carousel-arrow.next');
+            let currentSlide = 0;
+            let slideInterval;
+            
+            // Function to show a specific slide
+            function showSlide(index) {
+                // Remove active class from all slides and dots
+                carouselSlides.forEach(slide => slide.classList.remove('active'));
+                carouselDots.forEach(dot => dot.classList.remove('active'));
+                
+                // Add active class to current slide and dot
+                carouselSlides[index].classList.add('active');
+                carouselDots[index].classList.add('active');
+                
+                currentSlide = index;
+            }
+            
+            // Function to show next slide
+            function nextSlide() {
+                let nextIndex = (currentSlide + 1) % carouselSlides.length;
+                showSlide(nextIndex);
+            }
+            
+            // Function to show previous slide
+            function prevSlide() {
+                let prevIndex = (currentSlide - 1 + carouselSlides.length) % carouselSlides.length;
+                showSlide(prevIndex);
+            }
+            
+            // Start automatic slideshow
+            function startSlideShow() {
+                slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+            }
+            
+            // Stop automatic slideshow
+            function stopSlideShow() {
+                clearInterval(slideInterval);
+            }
+            
+            // Event listeners for navigation
+            prevButton.addEventListener('click', function() {
+                stopSlideShow();
+                prevSlide();
+                startSlideShow();
+            });
+            
+            nextButton.addEventListener('click', function() {
+                stopSlideShow();
+                nextSlide();
+                startSlideShow();
+            });
+            
+            // Event listeners for dots
+            carouselDots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    stopSlideShow();
+                    const slideIndex = parseInt(this.getAttribute('data-index'));
+                    showSlide(slideIndex);
+                    startSlideShow();
+                });
+            });
+            
+            // Pause slideshow when hovering over carousel
+            const carousel = document.querySelector('.hero-carousel');
+            carousel.addEventListener('mouseenter', stopSlideShow);
+            carousel.addEventListener('mouseleave', startSlideShow);
+            
+            // Initialize carousel
+            startSlideShow();
+            
+            // Page Switching Functionality - 更新以包含新页面
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove all active states
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    pages.forEach(page => page.classList.remove('active'));
+                    
+                    // Add current active state
+                    this.classList.add('active');
+                    const pageId = this.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    // If switching to itinerary page, ensure map is initialized
+                    if (pageId === 'itinerary') {
+                        setTimeout(() => {
+                            const activeTab = document.querySelector('.itinerary-tab.active');
+                            if (activeTab) {
+                                const itineraryId = activeTab.getAttribute('data-itinerary');
+                                initMap(itineraryId);
+                            }
+                        }, 100);
+                    }
+                });
+            });
+            
+            // Itinerary Tab Functionality
+            const itineraryTabs = document.querySelectorAll('.itinerary-tab');
+            const itineraryContents = document.querySelectorAll('.itinerary-content');
+            
+            itineraryTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    itineraryTabs.forEach(t => t.classList.remove('active'));
+                    itineraryContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const itineraryId = this.getAttribute('data-itinerary');
+                    document.getElementById(`${itineraryId}-itinerary`).classList.add('active');
+                    
+                    // Initialize map for the active itinerary
+                    initMap(itineraryId);
+                });
+            });
+            
+            // View Itinerary buttons on homepage
+            const viewItineraryButtons = document.querySelectorAll('.view-itinerary');
+            viewItineraryButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Switch to itinerary page
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    pages.forEach(page => page.classList.remove('active'));
+                    
+                    document.querySelector('[data-page="itinerary"]').classList.add('active');
+                    document.getElementById('itinerary').classList.add('active');
+                    
+                    // Activate corresponding itinerary tab
+                    const tourId = this.getAttribute('data-tour');
+                    itineraryTabs.forEach(t => t.classList.remove('active'));
+                    itineraryContents.forEach(c => c.classList.remove('active'));
+                    
+                    document.querySelector(`[data-itinerary="${tourId}"]`).classList.add('active');
+                    document.getElementById(`${tourId}-itinerary`).classList.add('active');
+                    
+                    // Initialize map for the selected tour
+                    initMap(tourId);
+                });
+            });
+            
+            // Initialize maps
+            function initMap(tourId) {
+                console.log('Initializing map for:', tourId);
+                
+                let mapContainer, map, routeCoordinates, markers;
+                
+                switch(tourId) {
+                    case 'south-island':
+                        mapContainer = document.getElementById('south-island-map');
+                        // Clear container
+                        mapContainer.innerHTML = '';
+                        
+                        // Create map with satellite view
+                        map = L.map('south-island-map').setView([-44.5, 170], 7);
+                        
+                        // Add satellite layer as default
+                        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+                        }).addTo(map);
+                        
+                        // Add regular map layer as optional
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        
+                        // South Island route coordinates - more detailed route
+                        routeCoordinates = [
+                            [-43.5320, 172.6362], // Christchurch
+                            [-43.9876, 170.5020], // Lake Tekapo
+                            [-44.6682, 169.1320], // Queenstown
+                            [-44.6930, 169.1320], // Arrowtown
+                            [-45.0312, 168.6620], // Te Anau
+                            [-44.6710, 167.9250], // Milford Sound
+                            [-44.9920, 168.6620], // Wanaka
+                            [-43.5320, 172.6362]  // Back to Christchurch
+                        ];
+                        
+                        // Add route line
+                        L.polyline(routeCoordinates, {
+                            color: '#2E8B57',
+                            weight: 4,
+                            opacity: 0.7,
+                            smoothFactor: 1
+                        }).addTo(map);
+                        
+                        // Add markers for key locations with custom icons
+                        markers = [
+                            { 
+                                coords: [-43.5320, 172.6362], 
+                                title: "Christchurch", 
+                                description: "Start of South Island Tour - Explore the Botanic Gardens and Cardboard Cathedral",
+                                lat: -43.5320,
+                                lng: 172.6362,
+                                day: "Day 1"
+                            },
+                            { 
+                                coords: [-43.9876, 170.5020], 
+                                title: "Lake Tekapo", 
+                                description: "Famous turquoise lake with Church of the Good Shepherd and stargazing opportunities",
+                                lat: -43.9876,
+                                lng: 170.5020,
+                                day: "Day 2"
+                            },
+                            { 
+                                coords: [-44.6682, 169.1320], 
+                                title: "Queenstown", 
+                                description: "Adventure capital with bungee jumping, jet boating, and Skyline Gondola",
+                                lat: -44.6682,
+                                lng: 169.1320,
+                                day: "Day 3-5"
+                            },
+                            { 
+                                coords: [-44.6930, 169.1320], 
+                                title: "Arrowtown", 
+                                description: "Historic gold mining town with Chinese Settlement",
+                                lat: -44.6930,
+                                lng: 169.1320,
+                                day: "Day 5"
+                            },
+                            { 
+                                coords: [-45.0312, 168.6620], 
+                                title: "Te Anau", 
+                                description: "Gateway to Fiordland National Park and Milford Sound",
+                                lat: -45.0312,
+                                lng: 168.6620,
+                                day: "Day 4"
+                            },
+                            { 
+                                coords: [-44.6710, 167.9250], 
+                                title: "Milford Sound", 
+                                description: "Spectacular fjord with waterfalls, rainforest, and wildlife cruises",
+                                lat: -44.6710,
+                                lng: 167.9250,
+                                day: "Day 4"
+                            },
+                            { 
+                                coords: [-44.9920, 168.6620], 
+                                title: "Wanaka", 
+                                description: "Beautiful lakeside town with outdoor activities and scenic views",
+                                lat: -44.9920,
+                                lng: 168.6620,
+                                day: "Day 6"
+                            },
+                            { 
+                                coords: [-43.3700, 170.1800], 
+                                title: "Franz Josef Glacier", 
+                                description: "Accessible glacier with guided hikes and helicopter tours",
+                                lat: -43.3700,
+                                lng: 170.1800,
+                                day: "Day 7"
+                            },
+                            { 
+                                coords: [-42.4500, 171.2100], 
+                                title: "Punakaiki Pancake Rocks", 
+                                description: "Unique limestone rock formations with blowholes",
+                                lat: -42.4500,
+                                lng: 171.2100,
+                                day: "Day 8"
+                            },
+                            { 
+                                coords: [-41.2700, 173.2800], 
+                                title: "Nelson", 
+                                description: "Sunny coastal city with art galleries and craft breweries",
+                                lat: -41.2700,
+                                lng: 173.2800,
+                                day: "Day 9"
+                            },
+                            { 
+                                coords: [-42.9000, 171.7500], 
+                                title: "Arthur's Pass", 
+                                description: "Mountain pass with hiking trails and scenic views",
+                                lat: -42.9000,
+                                lng: 171.7500,
+                                day: "Day 10"
+                            }
+                        ];
+                        
+                        // Add markers to the map with custom icons
+                        markers.forEach(marker => {
+                            // Create custom icon
+                            const customIcon = L.divIcon({
+                                className: 'custom-marker',
+                                html: `<div style="background-color: #2E8B57; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">${marker.day.split(' ')[1]}</div>`,
+                                iconSize: [30, 30],
+                                iconAnchor: [15, 15]
+                            });
+                            
+                            L.marker(marker.coords, {icon: customIcon})
+                                .addTo(map)
+                                .bindPopup(`
+                                    <div style="min-width: 250px;">
+                                        <h3 style="margin: 0 0 5px; color: #2E8B57;">${marker.title}</h3>
+                                        <p style="margin: 0 0 5px; font-weight: bold;">${marker.day}</p>
+                                        <p style="margin: 0 0 10px;">${marker.description}</p>
+                                        <p style="margin: 0; font-size: 0.9em; color: #666;">Coordinates: ${marker.lat.toFixed(4)}, ${marker.lng.toFixed(4)}</p>
+                                    </div>
+                                `);
+                        });
+                        
+                        // Populate coordinates table
+                        populateCoordinatesTable('south-island-coordinates', markers);
+                        break;
+                        
+                    case 'north-island':
+                        mapContainer = document.getElementById('north-island-map');
+                        mapContainer.innerHTML = '';
+                        
+                        map = L.map('north-island-map').setView([-38.1368, 176.2497], 7);
+                        
+                        // Add satellite layer
+                        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                            maxZoom: 20,
+                            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                            attribution: '© Google Satellite'
+                        }).addTo(map);
+                        
+                        // Add regular map layer as optional
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        
+                        // North Island route coordinates
+                        routeCoordinates = [
+                            [-36.8485, 174.7633], // Auckland
+                            [-37.7870, 175.2793], // Hamilton
+                            [-38.1368, 176.2497], // Rotorua
+                            [-38.6623, 178.0177], // Gisborne
+                            [-39.4928, 176.9120], // Napier
+                            [-41.2865, 174.7762]  // Wellington
+                        ];
+                        
+                        // Add route line
+                        L.polyline(routeCoordinates, {
+                            color: '#E67E22',
+                            weight: 4,
+                            opacity: 0.7
+                        }).addTo(map);
+                        
+                        // Add markers for key locations
+                        markers = [
+                            { 
+                                coords: [-36.8485, 174.7633], 
+                                title: "Auckland", 
+                                description: "Start of North Island Tour - Sky Tower, Viaduct Harbour, and Auckland Domain",
+                                lat: -36.8485,
+                                lng: 174.7633
+                            },
+                            { 
+                                coords: [-37.7870, 175.2793], 
+                                title: "Hamilton", 
+                                description: "Waikato region with Hobbiton Movie Set nearby",
+                                lat: -37.7870,
+                                lng: 175.2793
+                            },
+                            { 
+                                coords: [-38.1368, 176.2497], 
+                                title: "Rotorua", 
+                                description: "Geothermal wonders including Pohutu Geyser and Māori cultural experiences",
+                                lat: -38.1368,
+                                lng: 176.2497
+                            },
+                            { 
+                                coords: [-38.6623, 178.0177], 
+                                title: "Gisborne", 
+                                description: "East coast beauty and first city to see the sunrise",
+                                lat: -38.6623,
+                                lng: 178.0177
+                            },
+                            { 
+                                coords: [-39.4928, 176.9120], 
+                                title: "Napier", 
+                                description: "Art Deco city with unique architecture and wine regions",
+                                lat: -39.4928,
+                                lng: 176.9120
+                            },
+                            { 
+                                coords: [-41.2865, 174.7762], 
+                                title: "Wellington", 
+                                description: "Capital city with Te Papa Museum and vibrant Cuba Street",
+                                lat: -41.2865,
+                                lng: 174.7762
+                            },
+                            { 
+                                coords: [-38.2606, 175.5725], 
+                                title: "Waitomo Caves", 
+                                description: "Famous glowworm caves with underground river boat rides",
+                                lat: -38.2606,
+                                lng: 175.5725
+                            },
+                            { 
+                                coords: [-39.2927, 175.5663], 
+                                title: "Tongariro National Park", 
+                                description: "Volcanic landscapes and the famous Tongariro Alpine Crossing",
+                                lat: -39.2927,
+                                lng: 175.5663
+                            }
+                        ];
+                        
+                        // Add markers to the map
+                        markers.forEach(marker => {
+                            L.marker(marker.coords)
+                                .addTo(map)
+                                .bindPopup(`<b>${marker.title}</b><br>${marker.description}<br>Coordinates: ${marker.lat.toFixed(4)}, ${marker.lng.toFixed(4)}`);
+                        });
+                        
+                        // Populate coordinates table
+                        populateCoordinatesTable('north-island-coordinates', markers);
+                        break;
+                        
+                    case 'adventure':
+                        mapContainer = document.getElementById('adventure-map');
+                        mapContainer.innerHTML = '';
+                        
+                        map = L.map('adventure-map').setView([-44.6682, 169.1320], 8);
+                        
+                        // Add satellite layer
+                        L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                            maxZoom: 20,
+                            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                            attribution: '© Google Satellite'
+                        }).addTo(map);
+                        
+                        // Add regular map layer as optional
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(map);
+                        
+                        // Adventure tour route coordinates
+                        routeCoordinates = [
+                            [-44.6682, 169.1320], // Queenstown
+                            [-44.6930, 169.1320], // Skyline Gondola
+                            [-45.0150, 168.6620], // Nevis Bungee
+                            [-44.9170, 168.3870], // Shotover Canyon
+                            [-44.9920, 168.6620], // Wanaka
+                            [-44.6682, 169.1320]  // Back to Queenstown
+                        ];
+                        
+                        // Add route line
+                        L.polyline(routeCoordinates, {
+                            color: '#1E6EA7',
+                            weight: 4,
+                            opacity: 0.7
+                        }).addTo(map);
+                        
+                        // Add markers for key locations
+                        markers = [
+                            { 
+                                coords: [-44.6682, 169.1320], 
+                                title: "Queenstown", 
+                                description: "Adventure capital with multiple extreme sports activities",
+                                lat: -44.6682,
+                                lng: 169.1320
+                            },
+                            { 
+                                coords: [-44.6930, 169.1320], 
+                                title: "Skyline Gondola", 
+                                description: "Panoramic views and paragliding launch point",
+                                lat: -44.6930,
+                                lng: 169.1320
+                            },
+                            { 
+                                coords: [-45.0150, 168.6620], 
+                                title: "Nevis Bungee", 
+                                description: "134m bungee jump - New Zealand's highest",
+                                lat: -45.0150,
+                                lng: 168.6620
+                            },
+                            { 
+                                coords: [-44.9170, 168.3870], 
+                                title: "Shotover Canyon", 
+                                description: "Canyon swinging and white water rafting",
+                                lat: -44.9170,
+                                lng: 168.3870
+                            },
+                            { 
+                                coords: [-44.9920, 168.6620], 
+                                title: "Wanaka", 
+                                description: "Lake activities and via ferrata climbing",
+                                lat: -44.9920,
+                                lng: 168.6620
+                            },
+                            { 
+                                coords: [-44.7350, 169.1320], 
+                                title: "Coronet Peak", 
+                                description: "Paragliding and skydiving drop zone",
+                                lat: -44.7350,
+                                lng: 169.1320
+                            },
+                            { 
+                                coords: [-45.0312, 168.6620], 
+                                title: "Remarkables Range", 
+                                description: "Heli-hiking and alpine adventures",
+                                lat: -45.0312,
+                                lng: 168.6620
+                            }
+                        ];
+                        
+                        // Add markers to the map
+                        markers.forEach(marker => {
+                            L.marker(marker.coords)
+                                .addTo(map)
+                                .bindPopup(`<b>${marker.title}</b><br>${marker.description}<br>Coordinates: ${marker.lat.toFixed(4)}, ${marker.lng.toFixed(4)}`);
+                        });
+                        
+                        // Populate coordinates table
+                        populateCoordinatesTable('adventure-coordinates', markers);
+                        break;
+                }
+                
+                // Fit map to show all markers
+                if (routeCoordinates && routeCoordinates.length > 0 && map) {
+                    map.fitBounds(routeCoordinates);
+                }
+                
+                // Trigger map resize to ensure proper rendering
+                if (map) {
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 100);
+                }
+            }
+            
+            // Function to populate coordinates table
+            function populateCoordinatesTable(tableId, markers) {
+                const tableBody = document.getElementById(tableId);
+                tableBody.innerHTML = '';
+                
+                markers.forEach(marker => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><strong>${marker.title}</strong></td>
+                        <td>${marker.lat.toFixed(4)}</td>
+                        <td>${marker.lng.toFixed(4)}</td>
+                        <td>${marker.description}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+            
+            // Initialize the default map (South Island) when page loads
+            setTimeout(() => {
+                const activeItinerary = document.querySelector('.itinerary-tab.active');
+                if (activeItinerary) {
+                    initMap(activeItinerary.getAttribute('data-itinerary'));
+                }
+            }, 500);
+            
+            // Initialize tours page content
+            const toursGrid = document.querySelector('#tours .tours-grid');
+            if (toursGrid) {
+                toursGrid.innerHTML = `
+                    <div class="tour-card">
+                        <div class="tour-image" style="background-image: url('https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D');"></div>
+                        <div class="tour-content">
+                            <span class="tour-badge">Bestseller</span>
+                            <h3 class="tour-title">South Island Classic Loop 10-Day Tour</h3>
+                            <div class="tour-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> Christchurch - Queenstown</span>
+                                <span><i class="fas fa-clock"></i> 10 Days 9 Nights</span>
+                            </div>
+                            <div class="tour-price">From ¥12,800 / person</div>
+                            <a href="#" class="btn view-itinerary" data-tour="south-island" style="display: block; text-align: center;">View Itinerary</a>
+                        </div>
+                    </div>
+                    <div class="tour-card">
+                        <div class="tour-image" style="background-image: url('https://images.unsplash.com/photo-1528988719300-046ff7faf8cb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fG5ldyUyMHplYWxhbmR8ZW58MHx8MHx8fDA%3D');"></div>
+                        <div class="tour-content">
+                            <span class="tour-badge">Family Choice</span>
+                            <h3 class="tour-title">North Island Cultural Adventure 7-Day Tour</h3>
+                            <div class="tour-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> Auckland - Rotorua</span>
+                                <span><i class="fas fa-clock"></i> 7 Days 6 Nights</span>
+                            </div>
+                            <div class="tour-price">From ¥8,900 / person</div>
+                            <a href="#" class="btn view-itinerary" data-tour="north-island" style="display: block; text-align: center;">View Itinerary</a>
+                        </div>
+                    </div>
+                    <div class="tour-card">
+                        <div class="tour-image" style="background-image: url('https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bmV3JTIwemVhbGFuZHxlbnwwfHwwfHx8MA%3D%3D');"></div>
+                        <div class="tour-content">
+                            <span class="tour-badge">Adventure</span>
+                            <h3 class="tour-title">Extreme Sports & Natural Wonders 8-Day Tour</h3>
+                            <div class="tour-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> Queenstown - Wanaka</span>
+                                <span><i class="fas fa-clock"></i> 8 Days 7 Nights</span>
+                            </div>
+                            <div class="tour-price">From ¥15,200 / person</div>
+                            <a href="#" class="btn view-itinerary" data-tour="adventure" style="display: block; text-align: center;">View Itinerary</a>
+                        </div>
+                    </div>
+                    <div class="tour-card">
+                        <div class="tour-image" style="background-image: url('https://plus.unsplash.com/premium_photo-1661962302792-4b05d3e08513?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bmV3JTIwemVhbGFuZHxlbnwwfHwwfHx8MA%3D%3D');"></div>
+                        <div class="tour-content">
+                            <span class="tour-badge">Romantic Honeymoon</span>
+                            <h3 class="tour-title">Luxury Honeymoon 9-Day Tour</h3>
+                            <div class="tour-meta">
+                                <span><i class="fas fa-map-marker-alt"></i> Queenstown - Marlborough</span>
+                                <span><i class="fas fa-clock"></i> 9 Days 8 Nights</span>
+                            </div>
+                            <div class="tour-price">From ¥18,500 / person</div>
+                            <a href="#" class="btn" style="display: block; text-align: center;">View Details</a>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
